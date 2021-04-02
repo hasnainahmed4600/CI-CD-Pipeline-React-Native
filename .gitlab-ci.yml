@@ -1,0 +1,52 @@
+# .job_template: &job_deploy
+#   stage: deploy
+#   before_script:
+#     - yarn install
+#     - npm install
+#   tags:
+#     - macosshell
+    
+# deploy:ios:prod:
+#   variables:
+#     PLATFORM: ios
+#     FILE_TYPE: ipa
+#     OUTPUT_PATH: ./$CI_PROJECT_NAME
+#   <<: *job_deploy
+#   script:
+#     - export PACKAGE_NAME=$(node -p -e "require('./package.json').name")
+#     - cd ios
+#     - xcodebuild -scheme $PACKAGE_NAME archive -archivePath $PACKAGE_NAME.xcarchive -allowProvisioningUpdates
+#     - xcodebuild -exportArchive -archivePath ./$PACKAGE_NAME.xcarchive -exportPath . -exportOptionsPlist $PACKAGE_NAME/Info.plist
+#     - mv $PACKAGE_NAME.ipa ../$PACKAGE_NAME.ipa
+
+stages:
+  - build
+
+variables:
+  LC_ALL: "en_US.UTF-8"
+  LANG: "en_US.UTF-8"
+  TOKEN: "TX-n8tNZxec288yU8a_-" # Past your Personal Access Token Here
+  GITLAB_URL: "https://gitlab.com"
+
+before_script:
+  - GITLAB_URL=$(echo ${CI_PROJECT_URL} |awk -F "/" '{print $1 "//" $2$3}')
+  - yarn install   
+
+ios:upload_testflight:
+  dependencies: []
+  stage: build
+  variables:
+    VAR_NAME: BUILD_NUMBER_IOS # Counter of version Code IOS
+  script:
+    - 'VAR=$(curl -s -f  --header "PRIVATE-TOKEN: ${TOKEN}" "${GITLAB_URL}/api/v4/projects/${CI_PROJECT_ID}/variables/${VAR_NAME}" | jq  -r ''.value'' ) ' # Get from Personal Gitlab api the variable environement
+    - let VAR=VAR+1 # Increment the Version code
+    - export BUILD_NUMBER_IOS=${VAR} # Add it to your environement
+    - echo $BUILD_NUMBER_IOS # log   
+    - cd ios  
+    - bundle exec fastlane env
+    - fastlane build # launch the lane beta
+    - fastlane action build_app
+    
+  tags:
+    - ios # tag to launch your specific gitlab runner
+  when: manual
