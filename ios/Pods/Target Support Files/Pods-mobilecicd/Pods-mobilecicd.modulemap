@@ -1,6 +1,0 @@
-module Pods_mobilecicd {
-  umbrella header "Pods-mobilecicd-umbrella.h"
-
-  export *
-  module * { export * }
-}
