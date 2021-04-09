@@ -1,0 +1,6 @@
+module Pods_mobilecicd_mobilecicdTests {
+  umbrella header "Pods-mobilecicd-mobilecicdTests-umbrella.h"
+
+  export *
+  module * { export * }
+}
